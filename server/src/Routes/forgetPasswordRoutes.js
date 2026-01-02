@@ -5,8 +5,8 @@ const {
   updatePassword,
 } = require("../Controller/forgetEmailController");
 
-forgetPasswordRoutes.post("/forgotpassword", forgetPassword);
-forgetPasswordRoutes.get("/resetpassword/:uuid", resetPassword);
-forgetPasswordRoutes.post("/updatepassword", updatePassword);
+forgetPasswordRoutes.post("/password/forgot-password", forgetPassword);
+forgetPasswordRoutes.get("/password/reset-password/:uuid", resetPassword);
+forgetPasswordRoutes.post("/password/update-password", updatePassword);
 
 module.exports = forgetPasswordRoutes;

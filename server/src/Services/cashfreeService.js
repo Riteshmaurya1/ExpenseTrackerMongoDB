@@ -31,8 +31,7 @@ const createOrder = async (
         customer_phone,
       },
       order_meta: {
-        // return_url: `http://localhost:3000/premium/payment-status/${orderId}`,
-        return_url: `http://127.0.0.1:5500/client/payment/status.html?orderId=${orderId}`,
+        return_url: `${process.env.PAYMENT_SUCCESS_RETURN_URL}?orderId=${orderId}`,
         payment_methods: "cc,dc,upi",
       },
       order_expiry_time: formattedExpiryDate,
@@ -40,39 +39,36 @@ const createOrder = async (
 
     const response = await cashfree.PGCreateOrder(request);
     if (!response?.data?.payment_session_id) {
-      console.error("Cashfree response error:", response?.data);
       throw new Error("No payment_session_id returned from Cashfree");
     }
     return response.data.payment_session_id;
   } catch (error) {
-    // console.error("Error Creating Order", error.message);
-    console.error(
-      "Error Creating Order:",
-      error.response?.data || error.message
-    );
   }
 };
 
 // Check order status with userId
 const orderStatus = async (orderId) => {
-  // Step 1: Fetch order status from Cashfree
-  const response = await cashfree.PGOrderFetchPayments(orderId);
-  const payments = response?.data || [];
+  try {
+    // Step 1: Fetch order status from Cashfree
+    const response = await cashfree.PGOrderFetchPayments(orderId);
+    const payments = response?.data || [];
 
-  if (!payments.length) {
-    throw new Error("No payment records found in Cashfree");
-  }
+    if (!payments || payments.length === 0) {
+      throw new Error("No payment records found in Cashfree");
+    }
 
-  // // Step 3: Get the most recent payment
-  const latestPayment = payments[0];
-  const { payment_status, payment_message, payment_amount } = latestPayment;
+    // Step 2: Get the most recent payment
+    const latestPayment = payments[0];
+    const { payment_status, payment_message, payment_amount } = latestPayment;
 
-  // send status to the
-  return {
-    payment_status,
-    payment_message,
-    payment_amount,
-  };
+    return {
+      payment_status,
+      payment_message,
+      payment_amount,
+    };
+  } catch (error) {
+    throw error;
+    }
 };
 
 module.exports = { createOrder, orderStatus };

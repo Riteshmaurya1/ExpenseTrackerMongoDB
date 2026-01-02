@@ -36,7 +36,7 @@ const forgetPassword = async (req, res) => {
     });
 
     // Making the reset link for sending to the user via mail.
-    const resetLink = `http://localhost:3000/password/resetpassword/${uuid}`;
+    const resetLink = `http://localhost:3000/api/v1/password/reset-password/${uuid}`;
 
     // Invoke the forgot email func
     const response = await sendPasswordResetMail(email, resetLink);
@@ -44,6 +44,7 @@ const forgetPassword = async (req, res) => {
     // return res for the confirmation
     return res.status(200).json({
       message: "Password reset email sent successfully",
+      info: response,
     });
   } catch (err) {
     return res.status(500).json({

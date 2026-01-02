@@ -154,8 +154,30 @@ const profile = async (req, res) => {
   }
 };
 
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.payload.id;
+    const { username } = req.body;
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { username },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    return res.status(200).json({
+      data: updatedUser,
+    });
+  } catch (err) {
+    console.error("Update Profile Error:", err);
+    res.status(500).json({
+      err: err.message,
+    });
+  }
+};
+
 module.exports = {
   userSignUp,
   login,
   profile,
+  updateProfile,
 };

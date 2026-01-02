@@ -33,7 +33,7 @@ const jwtAuth = (req, res, next) => {
 
 const generateJwtToken = (userData) => {
   // generate a new jwt token using user data.
-  return jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: 86400 });
+  return jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
 
 module.exports = {

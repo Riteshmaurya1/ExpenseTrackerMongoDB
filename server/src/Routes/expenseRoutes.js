@@ -1,22 +1,16 @@
 const express = require("express");
 const expenseRoutes = express.Router();
-const { jwtAuth } = require("../Auth/jwt");
+const { jwtAuth } = require("../auth/jwt");
 const {
   addExpense,
-  getSingleExpense,
-  updateExpense,
   deleteExpense,
   allExpenses,
+  updateExpense
 } = require("../Controller/expenseController");
 
-// Public health check
-expenseRoutes.get("/", (req, res) => res.json({ message: "Expense API" }));
-
-// Protected routes
-expenseRoutes.post("/add", jwtAuth, addExpense); // POST /tasks/add
-expenseRoutes.get("/:id", jwtAuth, getSingleExpense); // GET /tasks/2
-expenseRoutes.put("/update/:id", jwtAuth, updateExpense); // PUT /tasks/update/2
-expenseRoutes.delete("/delete/:id", jwtAuth, deleteExpense); // DELETE /tasks/delete/7
-expenseRoutes.get("/all", jwtAuth, allExpenses); // GET /tasks/all with pagination
+expenseRoutes.post("/tasks/add", jwtAuth, addExpense);
+expenseRoutes.put("/tasks/update/:id", jwtAuth, updateExpense);
+expenseRoutes.delete("/tasks/delete/:id", jwtAuth, deleteExpense);
+expenseRoutes.get("/tasks/all", jwtAuth, allExpenses);
 
 module.exports = expenseRoutes;

@@ -12,7 +12,7 @@ const expenseSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["fuel", "food", "electricity", "movie", "travel"],
+      enum: ["fuel", "food", "electricity", "movie", "travel","others"],
       required: true
     },
     note: {

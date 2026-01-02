@@ -6,23 +6,16 @@ const makeCategory = require("../Config/gemini-category");
 const addExpense = async (req, res) => {
   try {
     const userId = req.payload.id;
-    const { title, type, amount, frequency, date, note } = req.body;
+    const { amount, description, category, note } = req.body;
 
     // Validation
-    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-      return res.status(400).json({
-        message: "Amount is required and must be a positive number.",
-      });
+    if (!amount || !description || !note) {
+      return res.status(400).json({ message: "Provide all fields." });
     }
 
-    if (!title) {
-      return res.status(400).json({
-        message: "Title is required.",
-      });
-    }
-
-    // Auto-generate category from title if needed
-    let finalCategory = await makeCategory(title);
+    // Auto-generate category if missing or empty
+    let finalCategory =
+      category && category.trim() ? category : await makeCategory(description);
     console.log("finalCategory:", finalCategory);
 
     // Find the user
@@ -31,14 +24,10 @@ const addExpense = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // Create expense with all fields
+    // Create expense
     const expense = await Expense.create({
-      title,
-      type: type || "expense",
-      amount: parseFloat(amount),
-      frequency: frequency || "one-time",
-      date: date || new Date(),
-      description: title, // Use title as description for compatibility
+      amount,
+      description,
       category: finalCategory,
       userId,
       note,
@@ -65,92 +54,49 @@ const addExpense = async (req, res) => {
   }
 };
 
-// ===== GET SINGLE EXPENSE =====
-const getSingleExpense = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.payload.id;
-
-    // Find expense by ID and check if it belongs to user
-    const expense = await Expense.findOne({ _id: id, userId }).populate(
-      "userId",
-      "username email"
-    );
-
-    if (!expense) {
-      return res.status(404).json({
-        message: "Expense not found or not authorized",
-      });
-    }
-
-    res.status(200).json({
-      data: expense,
-      message: "Expense fetched successfully",
-    });
-  } catch (error) {
-    console.error("Error fetching expense:", error);
-    res.status(500).json({
-      err: error.message,
-      message: "Something went wrong",
-    });
-  }
-};
-
 // ===== UPDATE EXPENSE =====
 const updateExpense = async (req, res) => {
   try {
-    const { id } = req.params;
+    const expenseId = req.params.id;
     const userId = req.payload.id;
-    const { title, type, amount, frequency, date, note } = req.body;
+    const { amount, description, category, note } = req.body;
 
-    // Find expense
-    const expense = await Expense.findOne({ _id: id, userId });
-
-    if (!expense) {
-      return res.status(404).json({
-        message: "Expense not found or not authorized",
-      });
+    // Validation
+    if (!amount || !description || !note) {
+      return res.status(400).json({ message: "Provide all fields." });
     }
 
-    // Get old amount for calculation
-    const oldAmount = expense.amount;
-    const newAmount = amount ? parseFloat(amount) : oldAmount;
-
-    // Calculate difference
-    const amountDifference = newAmount - oldAmount;
-
-    // Auto-generate category if title changed
-    let finalCategory = expense.category;
-    if (title && title !== expense.title) {
-      finalCategory = await makeCategory(title);
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
     }
 
-    // Update expense
+    // Find the existing expense
+    const existingExpense = await Expense.findOne({ _id: expenseId, userId });
+    if (!existingExpense) {
+      return res
+        .status(404)
+        .json({ message: "Expense not found or not authorized." });
+    }
+
+    // Calculate the difference in amount
+    const amountDifference = parseFloat(amount) - existingExpense.amount;
+
+    // Update the expense
     const updatedExpense = await Expense.findByIdAndUpdate(
-      id,
-      {
-        title: title || expense.title,
-        type: type || expense.type,
-        amount: newAmount,
-        frequency: frequency || expense.frequency,
-        date: date || expense.date,
-        description: title || expense.description,
-        category: finalCategory,
-        note: note !== undefined ? note : expense.note,
-      },
+      { _id: expenseId, userId },
+      { amount, description, category, note },
       { new: true }
     );
 
-    // Update user's total expenses
-    const user = await User.findById(userId);
-    if (user) {
-      const updatedTotal = (user.totalExpenses || 0) + amountDifference;
-      await User.findByIdAndUpdate(
-        userId,
-        { totalExpenses: updatedTotal },
-        { new: true }
-      );
-    }
+    // Update total expenses for the user
+    const updatedTotalExpenses = user.totalExpenses + amountDifference;
+    await User.findByIdAndUpdate(
+      userId,
+      { totalExpenses: updatedTotalExpenses },
+      { new: true }
+    );
 
     res.status(200).json({
       data: updatedExpense,
@@ -258,8 +204,7 @@ const allExpenses = async (req, res) => {
 
 module.exports = {
   addExpense,
-  getSingleExpense,
-  updateExpense,
   deleteExpense,
   allExpenses,
+  updateExpense,
 };

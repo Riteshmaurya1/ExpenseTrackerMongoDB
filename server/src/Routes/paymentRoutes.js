@@ -7,7 +7,7 @@ const {
 const { jwtAuth } = require("../auth/jwt");
 
 // This is for the payment for the getting premium membership.
-paymentRouter.post("/pay", jwtAuth, processPayment);
-paymentRouter.get("/payment-status/:orderId", jwtAuth, getPaymentStatus);
+paymentRouter.post("/payment/pay", jwtAuth, processPayment);
+paymentRouter.get("/payment/status/:orderId", jwtAuth, getPaymentStatus);
 
 module.exports = paymentRouter;

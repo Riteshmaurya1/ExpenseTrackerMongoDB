@@ -49,11 +49,11 @@ app.get("/", (req, res) => {
 });
 
 // Custom routes.
-app.use("/user", userRouter);
-app.use("/api/tasks", expenseRouter);
-app.use("/payment", paymentRouter);
-app.use("/premium", premiumRouter);
-app.use("/password", forgetPasswordRouter);
+app.use("/api/v1", userRouter);
+app.use("/api/v1", expenseRouter);
+app.use("/api/v1", paymentRouter);
+app.use("/api/v1", premiumRouter);
+app.use("/api/v1", forgetPasswordRouter);
 
 //
 (async () => {
