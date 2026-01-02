@@ -1,0 +1,32 @@
+{
+  "name": "expensetrackerMongoDb",
+  "version": "1.0.0",
+  "description": "This is node js expense tracker project which is connected to the client",
+  "license": "ISC",
+  "author": "Ritesh Maurya",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "dependencies": {
+    "@getbrevo/brevo": "^3.0.1",
+    "@google/genai": "^1.29.0",
+    "bcrypt": "^6.0.0",
+    "cashfree-pg": "^5.1.0",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.1",
+    "mysql2": "^3.15.3",
+    "sequelize": "^6.37.7",
+    "sib-api-v3-sdk": "^8.5.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.6.3"
+  }
+}
