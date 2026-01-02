@@ -20,9 +20,8 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.21.0",
     "morgan": "^1.10.1",
-    "mysql2": "^3.15.3",
-    "sequelize": "^6.37.7",
     "sib-api-v3-sdk": "^8.5.0",
     "uuid": "^8.3.2"
   },

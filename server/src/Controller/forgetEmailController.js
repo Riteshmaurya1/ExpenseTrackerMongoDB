@@ -16,7 +16,8 @@ const forgetPassword = async (req, res) => {
     }
 
     // Check user is exit or not.
-    const user = await User.findOne({ where: { email } });
+    // CHANGED: { where: { email } } → { email }
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({
         message: "User not found.",
@@ -27,9 +28,10 @@ const forgetPassword = async (req, res) => {
     const uuid = uuidv4();
 
     // Store the details to the user.
+    // CHANGED: user.id → user._id
     await ForgotPasswordRequests.create({
       uuid: uuid,
-      userId: user.id,
+      userId: user._id,
       isActive: true,
     });
 
@@ -55,7 +57,8 @@ const resetPassword = async (req, res) => {
   try {
     const { uuid } = req.params;
 
-    const request = await ForgotPasswordRequests.findOne({ where: { uuid } });
+    // CHANGED: { where: { uuid } } → { uuid }
+    const request = await ForgotPasswordRequests.findOne({ uuid });
     if (!request || !request.isActive) {
       return res.status(400).json({
         message: "Invalid or expired reset link",
@@ -80,19 +83,25 @@ const updatePassword = async (req, res) => {
   try {
     const { uuid, newPassword } = req.body;
 
-    const request = await ForgotPasswordRequests.findOne({ where: { uuid } });
+    // CHANGED: { where: { uuid } } → { uuid }
+    const request = await ForgotPasswordRequests.findOne({ uuid });
     if (!request || !request.isActive) {
       return res.status(400).json({
         message: "Invalid or expired reset link",
       });
     }
     // Update user password
-    const user = await User.findByPk(request.userId);
+    // CHANGED: User.findByPk(request.userId) → User.findById(request.userId)
+    const user = await User.findById(request.userId);
     const hashed = await bcrypt.hash(newPassword, 10);
-    await user.update({ password: hashed });
+    // CHANGED: user.update({...}) → User.findByIdAndUpdate(...)
+    await User.findByIdAndUpdate(request.userId, { password: hashed });
 
     // Mark link as used
-    await request.update({ isActive: false });
+    // CHANGED: request.update({...}) → ForgotPasswordRequests.findByIdAndUpdate(...)
+    await ForgotPasswordRequests.findByIdAndUpdate(request._id, {
+      isActive: false,
+    });
 
     // Send a confimation response
     res.json({ message: "Password updated successfully" });

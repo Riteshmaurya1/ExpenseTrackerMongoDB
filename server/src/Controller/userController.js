@@ -1,13 +1,13 @@
 const User = require("../Model/user");
 const bcrypt = require("bcrypt");
-const { generateJwtToken } = require("../auth/jwt");
+const { generateJwtToken } = require("../Auth/jwt");
 
-// ****************** Register Logic ********************
+// ================== SIGNUP LOGIC ==================
 const userSignUp = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // Basic Inputs
+    // Validation: Check all fields provided
     if (!username || !email || !password) {
       return res.status(400).json({
         message: "Invalid Credentials.",
@@ -15,8 +15,9 @@ const userSignUp = async (req, res) => {
       });
     }
 
-    // check is user is existing or not.
-    const existingUser = await User.findOne({ where: { email } });
+    // Check if user already exists (Sequelize: findOne with where)
+    // Mongoose: findOne with direct object
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({
         message: "Email already registered, Please Login",
@@ -24,33 +25,42 @@ const userSignUp = async (req, res) => {
       });
     }
 
-    // hash the password for security resions.
+    // Hash the password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create a new user
+    // Sequelize: User.create()
+    // Mongoose: User.create() - SAME METHOD
     const user = await User.create({
       username,
       email,
       password: hashedPassword,
     });
 
-    // Making payload for sending to token
+    // Make payload for token
     const userPayload = {
-      id: user.id,
+      id: user._id, // Mongoose uses _id instead of id
       username: user.username,
       email: user.email,
     };
-    
-    // making Token
+
+    // Generate token
     const token = generateJwtToken(userPayload);
 
-    // return responce
+    // Return response
     return res.status(201).json({
       token,
-      user,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        totalExpenses: user.totalExpenses,
+        isPremium: user.isPremium,
+      },
     });
   } catch (err) {
+    console.error("Signup Error:", err);
     res.status(500).json({
       err: err.message,
       success: false,
@@ -58,45 +68,57 @@ const userSignUp = async (req, res) => {
   }
 };
 
-// *********************** login Logic*******************
+// ================== LOGIN LOGIC ==================
 const login = async (req, res) => {
   try {
-    // extracting data from body
+    // Extract data from body
     const { email, password } = req.body;
 
-    // check if user is register or not
-    const user = await User.findOne({ where: { email } });
+    // Check if user exists
+    // Sequelize: User.findOne({ where: { email } })
+    // Mongoose: User.findOne({ email })
+    const user = await User.findOne({ email });
 
-    // Check correct password.
+    // Check if user exists
     if (!user) {
       return res.status(404).json({
         message: "User not found.",
       });
     }
-    // compare password
-    const userPassword = await bcrypt.compare(password, user.password);
-    if (!userPassword) {
+
+    // Compare password
+    // Sequelize and Mongoose both use bcrypt.compare
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
       return res.status(401).json({
         message: "Invalid password",
       });
     }
 
-    // making payload
+    // Make payload
     const userPayload = {
-      id: user.id,
+      id: user._id, // Mongoose uses _id
       username: user.username,
       email: user.email,
     };
 
-    // generate token
+    // Generate token
     const token = generateJwtToken(userPayload);
 
-    // return response with token.
+    // Return response with token
     return res.status(200).json({
       token,
-      user,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        totalExpenses: user.totalExpenses,
+        isPremium: user.isPremium,
+      },
     });
   } catch (err) {
+    console.error("Login Error:", err);
     res.status(500).json({
       err: err.message,
       success: false,
@@ -104,23 +126,28 @@ const login = async (req, res) => {
   }
 };
 
+// ================== PROFILE LOGIC ==================
 const profile = async (req, res) => {
   try {
-    // Step 1: getting user is from JWT Payload.
+    // Step 1: Get user ID from JWT payload
     const userId = req.payload.id;
 
-    // Step 2: find user Details with userId.
-    const userDetails = await User.findByPk(userId);
+    // Step 2: Find user details
+    // Sequelize: User.findByPk(userId)
+    // Mongoose: User.findById(userId)
+    const userDetails = await User.findById(userId).select("-password");
+
     if (!userDetails) {
-      return res.json(404).json({
-        message: "user not found",
+      return res.status(404).json({
+        message: "User not found",
       });
     }
-    // console.log(user);
+
     return res.status(200).json({
       data: userDetails,
     });
   } catch (err) {
+    console.error("Profile Error:", err);
     res.status(500).json({
       err: err.message,
     });

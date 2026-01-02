@@ -9,30 +9,21 @@ const path = require("path");
 const fs = require("fs");
 
 const PORT = process.env.PORT;
-const db = require("./src/Config/db-connection");
-
-const User = require("./src/Model/user");
-const Expense = require("./src/Model/expense");
-const ForgotPasswordRequests = require("./src/Model/forgetPassword");
 
 const userRouter = require("./src/Routes/userRoutes");
 const expenseRouter = require("./src/Routes/expenseRoutes");
 const paymentRouter = require("./src/Routes/paymentRoutes");
 const premiumRouter = require("./src/Routes/premiumFeatureRoutes");
 const forgetPasswordRouter = require("./src/Routes/forgetPasswordRoutes");
-
-// require Models
-require("./src/Model/user");
-require("./src/Model/expense");
-require("./src/Model/payment");
+const connectDB = require("./src/Config/db-connection");
 
 // Associations for the user and expenses.
-User.hasMany(Expense);
-Expense.belongsTo(User);
+// User.hasMany(Expense);
+// Expense.belongsTo(User);
 
 // Associations for the user and ForgotPasswordRouter.
-User.hasMany(ForgotPasswordRequests);
-ForgotPasswordRequests.belongsTo(User);
+// User.hasMany(ForgotPasswordRequests);
+// ForgotPasswordRequests.belongsTo(User);
 
 // create log stream.
 const accessLogStream = fs.createWriteStream(
@@ -59,7 +50,7 @@ app.get("/", (req, res) => {
 
 // Custom routes.
 app.use("/user", userRouter);
-app.use("/expense", expenseRouter);
+app.use("/api/tasks", expenseRouter);
 app.use("/payment", paymentRouter);
 app.use("/premium", premiumRouter);
 app.use("/password", forgetPasswordRouter);
@@ -67,7 +58,7 @@ app.use("/password", forgetPasswordRouter);
 //
 (async () => {
   try {
-    await db.sync();
+    await connectDB();
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
