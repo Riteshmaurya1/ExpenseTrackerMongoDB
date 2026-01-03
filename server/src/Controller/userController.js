@@ -1,6 +1,6 @@
 const User = require("../Model/user");
 const bcrypt = require("bcrypt");
-const { generateJwtToken } = require("../Auth/jwt");
+const { generateJwtToken } = require("../auth/jwt");
 
 // ================== SIGNUP LOGIC ==================
 const userSignUp = async (req, res) => {
