@@ -1,29 +1,28 @@
 const mongoose = require("mongoose");
-const { v4: uuidv4 } = require("uuid");
 
-const forgotPasswordSchema = new mongoose.Schema(
-  {
-    uuid: {
-      type: String,
-      default: uuidv4,
-      unique: true
-    },
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true
-    },
-    isActive: {
-      type: Boolean,
-      default: true
-    }
+const forgotPasswordSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "User",
   },
-  { timestamps: true }
-);
+  token: {
+    type: String,
+    required: true,
+    // No unique constraint needed here since we hash tokens
+  },
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    expires: 3600, // Token expires after 1 hour (3600 seconds)
+  },
+});
 
-const ForgotPasswordRequests = mongoose.model(
-  "ForgotPasswordRequests",
-  forgotPasswordSchema
-);
+// Add compound index for better query performance
+forgotPasswordSchema.index({ userId: 1, isActive: 1 });
 
-module.exports = ForgotPasswordRequests;
+module.exports = mongoose.model("ForgotPasswordRequests", forgotPasswordSchema);
